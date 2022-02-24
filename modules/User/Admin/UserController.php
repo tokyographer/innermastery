@@ -11,6 +11,9 @@ use Modules\AdminController;
 use Modules\User\Events\VendorApproved;
 use Modules\User\Models\UserTransferCoin;
 use Modules\Vendor\Models\VendorRequest;
+use Modules\User\Models\Wallet\Transaction;
+use Modules\User\Models\UserWallet;
+use Modules\User\Models\UserTransaction;
 use Spatie\Permission\Models\Role;
 use Modules\User\Exports\UserExport;
 use Illuminate\Support\Facades\Cache;
@@ -60,15 +63,23 @@ class UserController extends AdminController
 
         if($request->query('type')){
             if($request->query('type') == "yes"){
-                $listUser->join('bravo_booking_payments', 'bravo_booking_payments.object_id', 'users.id')
-                        ->select('users.*')
-                        ->groupBy("users.id");
+                $listUser->where('customer', true);
             }else{
-                $listUser->leftJoin('bravo_booking_payments', 'bravo_booking_payments.object_id', 'users.id')
-                        ->select('users.*', 'bravo_booking_payments.object_id')
-                        ->whereRaw("bravo_booking_payments.object_id IS NULL")
-                        ->groupBy("users.id");
+                $listUser->where(function($query){
+                    $query->where('customer', false);
+                    $query->orWhere('customer', null);
+                });
             }
+            // if($request->query('type') == "yes"){
+            //     $listUser->join('bravo_booking_payments', 'bravo_booking_payments.object_id', 'users.id')
+            //             ->select('users.*')
+            //             ->groupBy("users.id");
+            // }else{
+            //     $listUser->leftJoin('bravo_booking_payments', 'bravo_booking_payments.object_id', 'users.id')
+            //             ->select('users.*', 'bravo_booking_payments.object_id')
+            //             ->whereRaw("bravo_booking_payments.object_id IS NULL")
+            //             ->groupBy("users.id");
+            // }
         }
 
         if($request->query('role')){
@@ -273,6 +284,7 @@ class UserController extends AdminController
         $row->vendor_commission_type = $request->input('vendor_commission_type');
         $row->vendor_commission_amount = $request->input('vendor_commission_amount');
         $row->agent_id = $request->input('agent_id') ?? null;
+        $row->customer = $request->input('customer') ?? null;
 
         //Block all service when user is block
         if($row->status == "blocked"){
@@ -353,6 +365,47 @@ class UserController extends AdminController
             'results' => $data
         ]);
     }
+
+    public function getForAsesor(Request $request)
+    {
+        $listUser = User::query()->orderBy('id','desc');
+        $listUser->role("Asesor");
+        $res = $listUser->orderBy('id', 'desc')->orderBy('first_name', 'asc')->limit(20)->get();
+
+        $data = [];
+        if (!empty($res)) {
+            foreach ($res as $item) {
+                $data[] = [
+                    'id'   => $item->id,
+                    'text' => $item->getDisplayName() ? $item->getDisplayName() . ' (' . $item->email . ')' : $item->email . ' (#' . $item->id . ')',
+                ];
+            }
+        }
+        return response()->json([
+            'results' => $data
+        ]);
+    }
+
+    public function getForCustomer(Request $request)
+    {
+        $listUser = User::query()->orderBy('id','desc');
+        $listUser->where("customer", 1);
+        $res = $listUser->orderBy('id', 'desc')->orderBy('first_name', 'asc')->limit(20)->get();
+
+        $data = [];
+        if (!empty($res)) {
+            foreach ($res as $item) {
+                $data[] = [
+                    'id'   => $item->id,
+                    'text' => $item->getDisplayName() ? $item->getDisplayName() . ' (' . $item->email . ')' : $item->email . ' (#' . $item->id . ')',
+                ];
+            }
+        }
+        return response()->json([
+            'results' => $data
+        ]);
+    }
+
 
     public function bulkEdit(Request $request)
     {
@@ -505,11 +558,14 @@ class UserController extends AdminController
     public function transfer_store(Request $request){
         $email = $request->input("email");
         $price = $request->input("price");
+        $payment_concept = $request->input("payment_concept");
+
         if($email && $price){
             $user = User::find($email);
             $row = auth()->user();
             $uuid = Str::uuid();
             $price = intval($price);
+
             DB::update("UPDATE user_wallets SET balance = balance + $price WHERE holder_id = $user->id");
             DB::update("UPDATE user_wallets SET balance = balance - $price WHERE holder_id = $row->id");
 
@@ -519,7 +575,49 @@ class UserController extends AdminController
             $transfer_coin->status = 'completed';
             $transfer_coin->uuid = $uuid;
             $transfer_coin->coins = $price;
+            $transfer_coin->payment_concept = $payment_concept;
             $transfer_coin->save();
+
+
+            $uuid = Str::uuid();
+            $user_to = UserWallet::where('holder_id', $user->id)->first();
+            if($user_to){
+                $transaction = new UserTransaction();
+                $transaction->payable_type = "App\User";
+                $transaction->payable_id = $user->id;
+                $transaction->wallet_id = $user_to->id;
+                $transaction->type = "deposit";
+                $transaction->amount = $price;
+                $transaction->confirmed = 1;
+                $transaction->meta = json_encode([
+                    'admin_deposit'=> $row->id,
+                    'method_payment'=> "deposit",
+                    "concept"=> $payment_concept
+                ]);
+                $transaction->uuid = $uuid;
+                $transaction->create_user = $row->id;
+                $transaction->save();
+            }
+
+            $uuid = Str::uuid();
+            $user_from = UserWallet::where('holder_id', $row->id)->first();
+            if($user_from){
+                $transaction = new UserTransaction();
+                $transaction->payable_type = "App\User";
+                $transaction->payable_id = $row->id;
+                $transaction->wallet_id = $user_from->id;
+                $transaction->type = "withdraw";
+                $transaction->amount = $price;
+                $transaction->confirmed = 1;
+                $transaction->meta = json_encode([
+                    'admin_deposit'=> $row->id,
+                    'method_payment'=> "withdraw",
+                    "concept"=> $payment_concept
+                ]);
+                $transaction->uuid = $uuid;
+                $transaction->create_user = $row->id;
+                $transaction->save();
+            }
 
             return redirect()->back()->with('success', __('Transfer completed'));
         }

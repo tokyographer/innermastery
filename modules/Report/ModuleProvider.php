@@ -91,6 +91,11 @@ class ModuleProvider extends \Modules\ModuleServiceProvider
                         'title'      => __('Booking Statistic'),
                         'icon'       => 'icon ion ion-md-podium',
                         'permission' => 'report_view',
+                    ],
+                    'customer'=>[
+                        'url'        => 'admin/module/report/customer',
+                        'title'      => __('Customer'),
+                        'icon'       => 'icon ion ion-md-podium'
                     ]
                 ]
             ],

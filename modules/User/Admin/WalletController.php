@@ -20,7 +20,6 @@ class WalletController extends AdminController
         if(!$row){
             abort(404);
         }
-
         $data = [
             'row'=>$row,
             'page_title'=>__("Add Credit"),
@@ -79,8 +78,26 @@ class WalletController extends AdminController
                     'method_payment'=>request()->input('method_payment', null),
                     'concept'=>request()->input('concept',null)
                 ]);
+
+                $payment = new DepositPayment();
+                $payment->payment_gateway = request()->input('method_payment', null);
+                $payment->amount = $amount;
+                $payment->status = "completed";
+                $payment->create_user = auth()->id();
+                $payment->object_id = $user_id;
+                $payment->object_model = "wallet_deposit";
+                $deposit_option = [
+                    "name" => "No Bonus",
+                    "amount" => $amount,
+                    "credit" => $amount
+                ];
+                $payment->meta = json_encode([
+                    'credit'=>$amount,
+                    'deposit_option'=>$deposit_option
+                ]);
+                $payment->save();
             }catch (\Exception $exception){
-                return redirect()->back()->with("error",$exception->getMessage());
+                return redirect()->back()->with("error", $exception->getMessage());
             }
 
             return redirect()->back()->with("success",__(":amount credit added",['amount'=>$amount]));
@@ -111,7 +128,6 @@ class WalletController extends AdminController
             return redirect()->back()->with("success",__(":amount credit added",['amount'=>$amount]));
         }
     }
-
     public function report(){
         $query = DepositPayment::query();
 
@@ -155,7 +171,6 @@ class WalletController extends AdminController
         ];
         return view("User::admin.wallet.report",$data);
     }
-
     public function reportBulkEdit(Request $request){
         $ids = $request->input('ids');
         $action = $request->input('action');
@@ -164,15 +179,15 @@ class WalletController extends AdminController
         if (empty($action))
             return redirect()->back()->with('error', __('Select an Action!'));
         if ($action == 'delete') {
-//            foreach ($ids as $id) {
-//                if($id == Auth::id()) continue;
-//                $query = User::where("id", $id)->first();
-//                if(!empty($query)){
-//                    $query->email.='_d';
-//                    $query->save();
-//                    $query->delete();
-//                }
-//            }
+        //            foreach ($ids as $id) {
+        //                if($id == Auth::id()) continue;
+        //                $query = User::where("id", $id)->first();
+        //                if(!empty($query)){
+        //                    $query->email.='_d';
+        //                    $query->save();
+        //                    $query->delete();
+        //                }
+        //            }
         } else {
             foreach ($ids as $id) {
                 switch ($action){
@@ -190,7 +205,6 @@ class WalletController extends AdminController
         }
         return redirect()->back()->with('success', __('Updated successfully!'));
     }
-
     public function export(){
         return (new WalletExport())->download('wallet-' . date('M-d-Y') . '.xlsx');
     }

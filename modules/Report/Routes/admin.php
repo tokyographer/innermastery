@@ -17,4 +17,6 @@ Route::post('/enquiry/bulkEdit','EnquiryController@bulkEdit')->name('report.admi
 
 
 Route::get('/statistic','StatisticController@index')->name('report.admin.statistic.index');
+
+Route::get('/customer','StatisticController@customer')->name('report.admin.customer.index');
 Route::get('/reloadChart','StatisticController@reloadChart')->name('report.admin.statistic.reloadChart');

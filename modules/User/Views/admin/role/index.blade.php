@@ -19,6 +19,7 @@
                         <th width="60px"><input type="checkbox" class="check-all"></th>
                         <th>{{ __('Name')}}</th>
                         <th>{{ __('Only Client')}}</th>
+                        <th>{{ __('Ordering')}}</th>
                         <th>{{ __('Date')}}</th>
                     </tr>
                     </thead>
@@ -27,9 +28,10 @@
                         <tr>
                             <td><input type="checkbox" name="ids[]" value="{{$row->id}}"></td>
                             <td class="title">
-                                <a href="{{route('user.admin.role.detail',['id' => $row->id])}}">{{ucfirst($row->name)}}</a>
+                                <a href="{{route('user.admin.role.detail',['id' => $row->id])}}">{{__($row->name)}}</a>
                             </td>
                             <td>@if($row->only_client) Si @else No @endif</td>
+                            <td>@if($row->orderby) {{ $row->orderby }} @else {{ __('Disorderly') }} @endif</td>
                             <td>{{ display_date($row->updated_at)}}</td>
                         </tr>
                     @endforeach

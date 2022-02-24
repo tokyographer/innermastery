@@ -74,7 +74,8 @@ class UserController extends FrontendController
 
     public function profile(Request $request)
     {
-        $user = Auth::user();
+        $auth = Auth::user();
+        $user = User::with("agent")->find($auth->id);
         $data = [
             'dataUser'         => $user,
             'page_title'       => __("Profile"),

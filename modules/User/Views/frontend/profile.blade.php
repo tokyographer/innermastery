@@ -116,6 +116,14 @@
                     <input type="text" value="{{old('zip_code',$dataUser->zip_code)}}" name="zip_code" placeholder="{{__("Zip Code")}}" class="form-control">
                     <i class="fa fa-map-pin input-icon"></i>
                 </div>
+                @if(isset($dataUser->agent))
+                    <div class="form-group">
+                        <label>{{__("Asesor")}}</label>
+                        <div style="height: 35px;line-height: 2.3;padding-left: 15px;background: #fff;border: 1px solid #dae1e7;">
+                            {{ $dataUser->agent->first_name }} {{ $dataUser->agent->last_name }}
+                        </div>
+                    </div>
+                @endif
 
             </div>
             <div class="col-md-12">

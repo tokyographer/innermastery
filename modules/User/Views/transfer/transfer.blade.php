@@ -49,6 +49,12 @@
                 </div>
             </div>
             <div class="col-md-12">
+                <div class="form-group">
+                    <label>{{__("Payment Concept")}}</label>
+                    <textarea type="number" name="payment_concept" placeholder="{{__("Payment Concept")}}" class="form-control"></textarea>
+                </div>
+            </div>
+            <div class="col-md-12">
                 <hr>
                 <button class="btn btn-primary btn-transfer-coins" type="submit"><i class="fa fa-save"></i> {{__('Transfer')}}</button>
             </div>
@@ -63,7 +69,7 @@
         $(document).on("keyup", ".coins_price_quantity", function(){
             const coins = "{{ $row->balance }}";
             let quantity = $(this).val();
-            if(coins < quantity){
+            if(parseInt(coins) < parseInt(quantity)){
                 alertify.error('{{__("You don not have enough :amount for payout", ["amount"=>format_money($row->balance)])}}');
                 $(this).val(coins);
             }
@@ -72,7 +78,7 @@
             e.preventDefault();
             let quantity = $(".coins_price_quantity").val();
             let email = $(".coins_user").val();
-            if(quantity <= 0 || quantity.length == 0){
+            if(parseInt(quantity) <= 0 || quantity.length == 0){
                 alertify.error('{{__("The amount to transfer must be greater than 0")}}');
                 return;
             }

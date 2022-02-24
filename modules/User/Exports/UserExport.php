@@ -13,7 +13,7 @@ class UserExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return User::select([
+        return User::with("agent")->select([
             'business_name',
             'first_name',
             'last_name',
@@ -26,11 +26,16 @@ class UserExport implements FromCollection, WithHeadings, WithMapping
             'country',
             'zip_code',
             'status',
+            'agent_id'
         ])->get();
     }
 
     public function map($user): array
     {
+        $agent = "";
+        if(isset($user->agent->first_name)){
+            $agent = ltrim($user->agent->first_name . ' ' . $user->agent->last_name, "=-");
+        }
         return [
             ltrim($user->business_name,"=-"),
             ltrim($user->first_name,"=-"),
@@ -44,7 +49,7 @@ class UserExport implements FromCollection, WithHeadings, WithMapping
             ltrim($user->country,"=-"),
             ltrim($user->zip_code,"=-"),
             ltrim($user->status,"=-"),
-            //ltrim($user->role_name,"=-"),
+            $agent
         ];
     }
 
@@ -63,7 +68,7 @@ class UserExport implements FromCollection, WithHeadings, WithMapping
             __('Country'),
             __('Zip Code'),
             __('Status'),
-            //__('Role'),
+            __('Agent'),
         ];
     }
 }

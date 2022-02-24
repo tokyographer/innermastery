@@ -53,6 +53,12 @@
                 </div>
             </div>
             <div class="col-md-12">
+                <div class="form-group">
+                    <label>{{__("Payment Concept")}}</label>
+                    <textarea type="number" name="payment_concept" placeholder="{{__("Payment Concept")}}" class="form-control"></textarea>
+                </div>
+            </div>
+            <div class="col-md-12">
                 <hr>
                 <button class="btn btn-primary btn-transfer-coins" type="submit"><i class="fa fa-save"></i> {{__('Transfer')}}</button>
             </div>

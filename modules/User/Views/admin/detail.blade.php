@@ -42,7 +42,7 @@
                                             \App\Helpers\AdminForm::select2('agent_id', [
                                                 'configs' => [
                                                     'ajax'        => [
-                                                        'url'      => url('/admin/module/user/getForAgent'),
+                                                        'url'      => url('/admin/module/user/getForAsesor'),
                                                         'dataType' => 'json'
                                                     ],
                                                     'allowClear'  => true,
@@ -84,25 +84,27 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>{{ __('Address Line 1')}}</label>
-                                        <input type="text" value="{{old('address',$row->address)}}" placeholder="{{ __('Address')}}" name="address" class="form-control">
+                                        <div id="pac-container">
+                                            <input type="text" value="{{old('address',$row->address)}}" placeholder="{{ __('Address')}}" name="address" class="form-control" id="pac-input" autocomplete="off">
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>{{ __('Address Line 2')}}</label>
-                                        <input type="text" value="{{old('address2',$row->address2)}}" placeholder="{{ __('Address 2')}}" name="address2" class="form-control">
+                                        <input type="text" value="{{old('address2',$row->address2)}}" placeholder="{{ __('Address 2')}}" name="address2" class="form-control" id="address2">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>{{__("City")}}</label>
-                                        <input type="text" value="{{old('city',$row->city)}}" name="city" placeholder="{{__("City")}}" class="form-control">
+                                        <input type="text" value="{{old('city',$row->city)}}" name="city" placeholder="{{__("City")}}" class="form-control" id="city">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>{{__("State")}}</label>
-                                        <input type="text" value="{{old('state',$row->state)}}" name="state" placeholder="{{__("State")}}" class="form-control">
+                                        <input type="text" value="{{old('state',$row->state)}}" name="state" placeholder="{{__("State")}}" class="form-control" id="state">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -116,10 +118,19 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>{{__("Zip Code")}}</label>
-                                        <input type="text" value="{{old('zip_code',$row->zip_code)}}" name="zip_code" placeholder="{{__("Zip Code")}}" class="form-control">
+                                        <input type="text" value="{{old('zip_code',$row->zip_code)}}" name="zip_code" placeholder="{{__("Zip Code")}}" id="zip_code" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>{{__("Customer")}}</label>
+                                        <select name="customer" class="form-control" required>
+                                            <option value="1">{{__('Yes')}}</option>
+                                            <option value="0" selected>{{__('No')}}</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -141,7 +152,7 @@
                                 <label>{{__('Status')}}</label>
                                 <select required class="custom-select" name="status">
                                     <option value="">{{ __('-- Select --')}}</option>
-                                    <option @if(old('status',$row->status) =='publish') selected @endif value="publish">{{ __('Publish')}}</option>
+                                    <option @if(old('status',$row->status) =='publish') selected @endif value="publish">{{ __('Active')}}</option>
                                     <option @if(old('status',$row->status) =='blocked') selected @endif value="blocked">{{ __('Blocked')}}</option>
                                 </select>
                             </div>
@@ -198,4 +209,53 @@
 
 @endsection
 @section ('script.body')
+    <script async src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_API') }}&libraries=places&callback=initMap"></script>
+    <script>
+        function initAutocomplete() {
+            const input = document.getElementById("pac-input");
+            const options = {
+                fields: ["address_components", "geometry", "icon", "name"],
+                strictBounds: false,
+                types: ["establishment"],
+            };
+            const autocomplete = new google.maps.places.Autocomplete(input, options);
+
+            google.maps.event.addListener(autocomplete, 'place_changed', function() {
+                const place = autocomplete.getPlace();
+                $('#city').val("");
+                $('#state').val("");
+                $('#country-sms-testing').val("");
+                $('#address2').val("");
+                $('#zip_code').val("");
+
+                for (const component of place.address_components) {
+                    const componentType = component.types[0];
+
+                    switch (componentType) {
+                        case "locality":
+                            $('#city').val(component.long_name);
+                            break;
+                        case "administrative_area_level_1": 
+                            $('#state').val(component.short_name);
+                            break;
+                        case "country":
+                            $('#country-sms-testing').val(component.short_name);
+                            break;
+                        case "sublocality_level_1":
+                            $('#address2').val(component.long_name);
+                            break;
+                        case "route":
+                            $('#address2').val(component.long_name);
+                            break;
+                        case "postal_code":
+                            $('#zip_code').val(component.long_name);
+                            break;
+                    }
+                }
+            });
+        }
+        $(document).on('keyup', '#pac-input', function(){
+            initAutocomplete();
+        });
+    </script>
 @endsection

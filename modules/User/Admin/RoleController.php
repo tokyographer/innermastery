@@ -22,7 +22,7 @@ class RoleController extends AdminController
     {
         $this->checkPermission('role_view');
         $data = [
-            'rows' => Role::paginate(20)
+            'rows' => Role::orderBy("orderby", "asc")->paginate(20)
         ];
         return view('User::admin.role.index', $data);
     }
@@ -38,7 +38,8 @@ class RoleController extends AdminController
             ]);
         }
         $data = [
-            'row' => $row
+            'row' => $row,
+            'roles' => Role::get()
         ];
         return view('User::admin.role.detail', $data);
     }
@@ -58,7 +59,8 @@ class RoleController extends AdminController
             }
         }
         $data = [
-            'row' => $row
+            'row' => $row,
+            'roles' => Role::get()
         ];
         return view('User::admin.role.detail', $data);
     }

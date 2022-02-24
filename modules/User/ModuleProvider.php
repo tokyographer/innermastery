@@ -40,7 +40,7 @@ class ModuleProvider extends ModuleServiceProvider
             'children'   => []
         ];
 
-        $roles = Role::all();
+        $roles = Role::orderBy("orderby", "asc")->get();
         foreach($roles as $key => $role){
             $options['children']['user' . ($key + 1)] = [
                 'url'   => 'admin/module/user?role=' . $role->name,

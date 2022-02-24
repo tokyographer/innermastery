@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Modules\AdminController;
 use Modules\Booking\Emails\NewBookingEmail;
 use Modules\Booking\Models\Booking;
+use App\User;
 
 class StatisticController extends AdminController
 {
@@ -23,6 +24,22 @@ class StatisticController extends AdminController
             'earning_detail_data' => Booking::getStatisticChartData($f, time(), $status)['detail']
         ];
         return view('Report::admin.statistic.index', $data);
+    }
+
+    public function customer()
+    {
+        $query = User::where('customer', 1);
+        $data = [
+            'rows'=> $query->paginate(20),
+            'page_title'=>__("Customer"),
+            'breadcrumbs'=>[
+                [
+                    'url'=>'#',
+                    'name'=>__('Customer'),
+                ],
+            ]
+        ];
+        return view('Report::admin.customer.index', $data);
     }
 
     public function reloadChart(Request $request)

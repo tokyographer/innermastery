@@ -3,6 +3,8 @@ use \Illuminate\Support\Facades\Route;
 
 Route::get('/getForSelect2', 'UserController@getForSelect2')->name('user.admin.getForSelect2');
 Route::get('/getForAgent', 'UserController@getForAgent')->name('user.admin.getForAgent');
+Route::get('/getForAsesor', 'UserController@getForAsesor')->name('user.admin.getForAsesor');
+Route::get('/getForCustomer', 'UserController@getForCustomer')->name('user.admin.getForCustomer');
 Route::get('/', 'UserController@index')->name('user.admin.index');
 Route::get('/create', 'UserController@create')->name('user.admin.create');
 Route::get('/edit/{id}', 'UserController@edit')->name('user.admin.detail');

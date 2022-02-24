@@ -26,6 +26,14 @@
                                     <option value="1" @if($row->only_client) selected @endif>{{ __('Yes') }}</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label>{{ __('Ordering')}}</label>
+                                <select name="orderby" id="orderby" class="form-control">
+                                    @foreach ($roles as $index => $role)
+                                        <option value="{{ $index + 1 }}" @if(($index + 1) == $row->orderby) selected @endif>{{ $index + 1 }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <hr>

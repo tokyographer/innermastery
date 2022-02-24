@@ -1,6 +1,13 @@
 @extends('layouts.user')
 @section('head')
-
+    <style>
+        .withdraw{
+            background: #ffe2e2;
+        }
+        .deposit{
+            background: #e6ffe6;
+        }
+    </style>
 @endsection
 @section('content')
     <h2 class="title-bar">
@@ -46,13 +53,15 @@
                         <tbody>
                             @if(count($transactions))
                                 @foreach($transactions as $transaction)
-                                    <tr>
+                                    <tr class="{{$transaction->type}}">
                                         <td>{{$transaction->id}}</td>
                                         <td>{{ucfirst($transaction->type)}}</td>
                                         <td>{{$transaction->amount}}</td>
                                         <td>
                                             @if($transaction->payment->gateway_obj)
-                                                {{$transaction->payment->gateway_obj->getDisplayName() ?? ''}}
+                                                {{$transaction->payment->gateway_obj->getDisplayName() ?? ""}}
+                                            @else
+                                                {{ __('Transaction') }}
                                             @endif
                                         </td>
                                         <td><span class="badge badge-{{$transaction->status_class}}">{{$transaction->status_name ?? ''}}</span></td>

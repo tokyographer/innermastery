@@ -29,9 +29,9 @@
                 <form method="get" class="filter-form filter-form-right d-flex justify-content-end flex-column flex-sm-row" role="search">
                     <input type="hidden" name="role" value="{{ Request()->role }}">
                     <select class="form-control" name="type">
-                        <option value="">{{ __('-- Select Type--')}}</option>
-                        <option value="yes" @if(Request()->type == "yes") selected @endif >{{ __('With purchase') }}</option>
-                        <option value="no" @if(Request()->type == "no") selected @endif >{{ __('Without purchase') }}</option>
+                        <option value="">{{ __('-- Asesor User --')}}</option>
+                        <option value="yes" @if(Request()->type == "yes") selected @endif >{{ __('Yes') }}</option>
+                        <option value="no" @if(Request()->type == "no") selected @endif >{{ __('No') }}</option>
                     </select>
                     <input type="text" name="s" value="{{ Request()->s }}" placeholder="{{__('Search by name')}}" class="form-control">
                     <button class="btn-info btn btn-icon btn_search" type="submit">{{__('Search User')}}</button>

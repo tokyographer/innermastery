@@ -1,6 +1,22 @@
 @extends('layouts.user')
 @section('head')
     <link rel="stylesheet" href="{{asset('module/booking/css/checkout.css')}}">
+    <style type="text/css">
+        @media(max-width: 768px){
+            .table-mini td, th{
+                font-size: 12px;
+            }
+            .table-mini .radio-label span{
+                display: none;
+            }
+            .table-mini .radio-label{
+                padding: 5px;
+            }
+            .table-mini .radio-label input{
+                margin: 0px;
+            }
+        }
+    </style>
 @endsection
 @section('content')
     <h2 class="title-bar">
@@ -17,7 +33,7 @@
                 {{-- @if(setting_item('wallet_deposit_type') == 'list') --}}
                     @if(!empty($wallet_deposit_lists))
                         <div class="table-responsive">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered table-mini">
                                 <thead>
                                 <tr>
                                     <th scope="col">#</th>
@@ -34,7 +50,7 @@
                                         <td>{{$item['name']}}</td>
                                         <td>{{format_money($item['amount'])}}</td>
                                         <td>{{$item['credit']}}</td>
-                                        <td><label class="btn btn-info" > <input type="radio" name="deposit_option" value="{{$k}}"> {{__("Select")}} </label></td>
+                                        <td><label class="btn btn-info radio-label" > <input type="radio" name="deposit_option" value="{{$k}}"> <span>{{__("Select")}}</span> </label></td>
                                     </tr>
                                 @endforeach
                                     <tr>
