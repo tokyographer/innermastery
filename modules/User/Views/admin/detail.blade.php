@@ -31,14 +31,14 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>{{__("User name")}}</label>
-                                        <input type="text" name="user_name" required value="{{old('user_name',$row->user_name)}}" placeholder="{{__("User name")}}" class="form-control">
+                                        <input type="text" name="user_name" required value="{{old('user_name',str_pad($row->id ?? $user_end , 5, "0", STR_PAD_LEFT))}}" placeholder="{{__("User name")}}" class="form-control">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                     <label>{{__("Agent")}}</label>
                                         <?php
-                                            $user = !empty(Request()->vendor_id) ? App\User::find(Request()->vendor_id) : false;
+                                            $user = !empty($row->agent_id) ? App\User::find($row->agent_id) : false;
                                             \App\Helpers\AdminForm::select2('agent_id', [
                                                 'configs' => [
                                                     'ajax'        => [
@@ -133,14 +133,40 @@
                                         </select>
                                     </div>
                                 </div>
-                            </div>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label class="">{{__("Location")}}</label>
 
+                                        <?php
+                                            $location = !empty($row->location_id) ? Modules\Location\Models\Location::find($row->location_id) : false;
+                                            \App\Helpers\AdminForm::select2('location_id', [
+                                                'configs' => [
+                                                    'ajax'        => [
+                                                        'url'      => url('admin/module/location/getForLocation'),
+                                                        'dataType' => 'json'
+                                                    ],
+                                                    'allowClear'  => true,
+                                                    'placeholder' => __('Location')
+                                                ]
+                                            ], !empty($location->id) ? [
+                                                $location->id,
+                                                $location->name . ' (#' . $location->id . ')'
+                                            ] : false)
+                                        ?>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="form-group">
                                 <label class="control-label">{{ __('Biographical')}}</label>
                                 <div class="">
                                     <textarea name="bio" class="d-none has-ckeditor" cols="30" rows="10">{{old('bio',$row->bio)}}</textarea>
                                 </div>
                             </div>
+                            @if(isset($row->id))
+                                <div class="form-group">
+                                    <a href="{{ route('user.admin.wallet.report') . '?user_id=' . $row->id }}" target="_blank" class="btn btn-success" style="width:100%;height:60px;line-height:3">Ver historial de usuario</a>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -197,6 +223,10 @@
                             </div>
                         </div>
                     </div>
+                    <div class="panel text-center">
+                        <div class="panel-title"><strong>{{ __('Link')}}</strong></div>
+                        <button type="button" class="btn btn-success m-3 btn_link">{{ __('Copy link') }}</button>
+                    </div>
                 </div>
             </div>
             <hr>
@@ -210,6 +240,9 @@
 @endsection
 @section ('script.body')
     <script async src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_API') }}&libraries=places&callback=initMap"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"/>
     <script>
         function initAutocomplete() {
             const input = document.getElementById("pac-input");
@@ -235,7 +268,7 @@
                         case "locality":
                             $('#city').val(component.long_name);
                             break;
-                        case "administrative_area_level_1": 
+                        case "administrative_area_level_1":
                             $('#state').val(component.short_name);
                             break;
                         case "country":
@@ -256,6 +289,15 @@
         }
         $(document).on('keyup', '#pac-input', function(){
             initAutocomplete();
+        });
+        $(document).on('click', '.btn_link', function(element) {
+            var $temp = $("<textarea>");
+            $("body").append($temp);
+            $temp.val('{{ route('user.admin.user_view_only', md5($row->id)) }}').select();
+            document.execCommand("copy");
+            $temp.remove();
+
+            alertify.success("Link copiado");
         });
     </script>
 @endsection

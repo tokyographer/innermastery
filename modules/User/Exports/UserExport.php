@@ -15,6 +15,7 @@ class UserExport implements FromCollection, WithHeadings, WithMapping
     {
         return User::with("agent")->select([
             'business_name',
+            'id',
             'first_name',
             'last_name',
             'email',
@@ -38,6 +39,7 @@ class UserExport implements FromCollection, WithHeadings, WithMapping
         }
         return [
             ltrim($user->business_name,"=-"),
+            ltrim(str_pad($user->id, 5, "0", STR_PAD_LEFT),"=-"),
             ltrim($user->first_name,"=-"),
             ltrim($user->last_name,"=-"),
             ltrim($user->email,"=-"),
@@ -57,6 +59,7 @@ class UserExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             __('Business Name'),
+            '#',
             __('First name'),
             __('Last name'),
             __('Email'),

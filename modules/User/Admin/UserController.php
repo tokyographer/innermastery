@@ -13,6 +13,7 @@ use Modules\User\Models\UserTransferCoin;
 use Modules\Vendor\Models\VendorRequest;
 use Modules\User\Models\Wallet\Transaction;
 use Modules\User\Models\UserWallet;
+use Modules\Booking\Models\Payment;
 use Modules\User\Models\UserTransaction;
 use Spatie\Permission\Models\Role;
 use Modules\User\Exports\UserExport;
@@ -32,7 +33,13 @@ class UserController extends AdminController
     {
         $this->checkPermission('user_view');
         $username = $request->query('s');
-        $listUser = User::query()->orderBy('id','desc');
+        $listUser = User::with('agent')->orderBy('id','desc');
+
+        $asesor=false;
+        if(Auth::user()->roles[0]->name == "Asesor") $asesor=true;
+
+        if($asesor) $listUser->where("agent_id", Auth::user()->id);
+
         if (!empty($username)) {
              $listUser->where(function($query) use($username){
                  $query->where('first_name', 'LIKE', '%' . $username . '%');
@@ -42,46 +49,12 @@ class UserController extends AdminController
                  $query->orWhere('last_name', 'LIKE', '%' . $username . '%');
              });
         }
-        // if($request->query('role') == "client"){
-        //     $listUser->select("users.*")
-        //             ->join("core_model_has_roles", "core_model_has_roles.model_id", DB::raw(Auth::user()->id))
-        //             ->join("core_roles", "core_roles.id", "core_model_has_roles.role_id");
-        // }else if($request->query('role') == "Asesor"){
-        //     $listUser->select("users.*")
-        //             ->join("core_model_has_roles", "core_model_has_roles.model_id", DB::raw(Auth::user()->id))
-        //             ->join("core_roles", "core_roles.id", "core_model_has_roles.role_id")
-        //             ->where()
-        //             ->where()
-        //             ->where()
-        // }else if($request->query('role')){
-        //     $listUser->role($request->query('role'));
-        //     // if($request->query('role') == "Asesor"){
-        //     //     $listUser->role("vendor");
-        //     //     $listUser->role("administrador");
-        //     // }
-        // }
-
-        if($request->query('type')){
-            if($request->query('type') == "yes"){
-                $listUser->where('customer', true);
-            }else{
-                $listUser->where(function($query){
-                    $query->where('customer', false);
-                    $query->orWhere('customer', null);
-                });
-            }
-            // if($request->query('type') == "yes"){
-            //     $listUser->join('bravo_booking_payments', 'bravo_booking_payments.object_id', 'users.id')
-            //             ->select('users.*')
-            //             ->groupBy("users.id");
-            // }else{
-            //     $listUser->leftJoin('bravo_booking_payments', 'bravo_booking_payments.object_id', 'users.id')
-            //             ->select('users.*', 'bravo_booking_payments.object_id')
-            //             ->whereRaw("bravo_booking_payments.object_id IS NULL")
-            //             ->groupBy("users.id");
-            // }
+        if($request->query('agent_id')){
+            $listUser->where('agent_id', $request->query('agent_id'));
         }
-
+        if($request->query('location_id')){
+            $listUser->where('location_id', $request->query('location_id'));
+        }
         if($request->query('role')){
             $listUser->role($request->query('role'));
         }
@@ -95,7 +68,8 @@ class UserController extends AdminController
 
     public function create(Request $request)
     {
-
+        $user_end = User::orderBy('id', 'desc')->first()->id;
+        $user_end = ($user_end + 1);
         $row = new \Modules\User\Models\User();
         $data = [
             'row' => $row,
@@ -105,7 +79,8 @@ class UserController extends AdminController
                     'name'=>__("Users"),
                     'url'=>'admin/module/user'
                 ]
-            ]
+            ],
+            'user_end' => $user_end
         ];
         return view('User::admin.detail', $data);
     }
@@ -285,7 +260,7 @@ class UserController extends AdminController
         $row->vendor_commission_amount = $request->input('vendor_commission_amount');
         $row->agent_id = $request->input('agent_id') ?? null;
         $row->customer = $request->input('customer') ?? null;
-
+        $row->location_id = $request->input('location_id') ?? null;
         //Block all service when user is block
         if($row->status == "blocked"){
             $services = get_bookable_services();
@@ -597,6 +572,35 @@ class UserController extends AdminController
                 $transaction->uuid = $uuid;
                 $transaction->create_user = $row->id;
                 $transaction->save();
+
+
+                $code = md5(uniqid() . rand(0, 99999));
+                $payment = new Payment();
+                $payment->booking_id = null;
+                $payment->payment_gateway = "deposit";
+                $payment->amount = $price;
+                $payment->status = "completed";
+                $payment->logs = json_encode([
+                    'admin_deposit'=> $row->id,
+                    'method_payment'=> "deposit",
+                    "concept"=> $payment_concept
+                ]);
+                $payment->create_user = $row->id;
+                $payment->update_user = $row->id;
+                $payment->code = $code;
+                $payment->object_id = $user_to->id;
+                $payment->object_model = "wallet_deposit";
+                $payment->meta = json_encode([
+                    'credit'=> $price,
+                    'deposit_option' => [
+                        'name' => 'No Bonus',
+                        'amount' => $price,
+                        'credit' => $price ,
+                    ]
+                ]);
+                $payment->wallet_transaction_id = $transaction->id;
+                $payment->transfer_coin_id = $transfer_coin->id;
+                $payment->save();
             }
 
             $uuid = Str::uuid();
@@ -617,10 +621,58 @@ class UserController extends AdminController
                 $transaction->uuid = $uuid;
                 $transaction->create_user = $row->id;
                 $transaction->save();
+
+
+                $code = md5(uniqid() . rand(0, 99999));
+                $payment = new Payment();
+                $payment->booking_id = null;
+                $payment->payment_gateway = "withdraw";
+                $payment->amount = $price;
+                $payment->status = "completed";
+                $payment->logs = json_encode([
+                    'admin_deposit'=> $row->id,
+                    'method_payment'=> "withdraw",
+                    "concept"=> $payment_concept
+                ]);
+                $payment->create_user = $row->id;
+                $payment->update_user = $row->id;
+                $payment->code = $code;
+                $payment->object_id = $row->id;
+                $payment->object_model = "wallet_deposit";
+                $payment->meta = json_encode([
+                    'credit'=> $price,
+                    'deposit_option' => [
+                        'name' => 'No Bonus',
+                        'amount' => $price,
+                        'credit' => $price ,
+                    ]
+                ]);
+                $payment->wallet_transaction_id = $transaction->id;
+                $payment->transfer_coin_id = $transfer_coin->id;
+                $payment->save();
             }
 
             return redirect()->back()->with('success', __('Transfer completed'));
         }
         return redirect()->back()->with('error', __('Transfer Not completed'));
+    }
+
+    public function user_view($id){
+        $row = User::with('agent', 'location')->whereRaw("md5(id) = ?", $id)->first();
+        $data = [
+            'row'   => $row,
+            'roles' => Role::all(),
+            'breadcrumbs'=>[
+                [
+                    'name'=>__("Users"),
+                    'url'=>'admin/module/user'
+                ],
+                [
+                    'name'=>__("View User: #:id",['id'=>$row->id]),
+                    'class' => 'active'
+                ],
+            ]
+        ];
+        return view('User::admin.view_data', $data);
     }
 }

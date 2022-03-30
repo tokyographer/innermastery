@@ -28,11 +28,38 @@
             <div class="col-left">
                 <form method="get" class="filter-form filter-form-right d-flex justify-content-end flex-column flex-sm-row" role="search">
                     <input type="hidden" name="role" value="{{ Request()->role }}">
-                    <select class="form-control" name="type">
-                        <option value="">{{ __('-- Asesor User --')}}</option>
-                        <option value="yes" @if(Request()->type == "yes") selected @endif >{{ __('Yes') }}</option>
-                        <option value="no" @if(Request()->type == "no") selected @endif >{{ __('No') }}</option>
-                    </select>
+                    <?php
+                        $location = !empty(Request()->location_id) ? Modules\Location\Models\Location::find(Request()->location_id) : false;
+                        \App\Helpers\AdminForm::select2('location_id', [
+                            'configs' => [
+                                'ajax'        => [
+                                    'url'      => url('admin/module/location/getForLocation'),
+                                    'dataType' => 'json'
+                                ],
+                                'allowClear'  => true,
+                                'placeholder' => __('Location')
+                            ]
+                        ], !empty($location->id) ? [
+                            $location->id,
+                            $location->name . ' (#' . $location->id . ')'
+                        ] : false)
+                    ?>
+                    <?php
+                        $user = !empty(Request()->agent_id) ? App\User::find(Request()->agent_id) : false;
+                        \App\Helpers\AdminForm::select2('agent_id', [
+                            'configs' => [
+                                'ajax'        => [
+                                    'url'      => url('/admin/module/user/getForAsesor'),
+                                    'dataType' => 'json'
+                                ],
+                                'allowClear'  => true,
+                                'placeholder' => __('Agent')
+                            ]
+                        ], !empty($user->id) ? [
+                            $user->id,
+                            $user->name_or_email . ' (#' . $user->id . ')'
+                        ] : false)
+                    ?>
                     <input type="text" name="s" value="{{ Request()->s }}" placeholder="{{__('Search by name')}}" class="form-control">
                     <button class="btn-info btn btn-icon btn_search" type="submit">{{__('Search User')}}</button>
                 </form>
@@ -44,11 +71,12 @@
         <div class="panel">
             <div class="panel-body">
                 <form action="" class="bravo-form-item">
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="min-height: 500px;">
                     <table class="table table-hover">
                         <thead>
                         <tr>
                             <th width="60px"><input type="checkbox" class="check-all"></th>
+                            <th class="text-center">#</th>
                             <th>{{__('Name')}}</th>
                             <th>{{__('Email')}}</th>
                             <th>{{__('Credit')}}</th>
@@ -56,7 +84,6 @@
                             <th>{{__('Role')}}</th>
                             <th>{{__('Asesor')}}</th>
                             <th class="date">{{ __('Date')}}</th>
-{{--                            <th class="status">{{__('Status')}}</th>--}}
                             <th></th>
                         </tr>
                         </thead>
@@ -64,6 +91,7 @@
                         @foreach($rows as $row)
                             <tr>
                                 <td><input type="checkbox" name="ids[]" value="{{$row->id}}" class="check-item"></td>
+                                <td class="text-center">{{ str_pad($row->id, 5, "0", STR_PAD_LEFT) }}</td>
                                 <td class="title">
                                     <a href="{{url('admin/module/user/edit/'.$row->id)}}">{{$row->getDisplayName()}}</a>
                                 </td>
@@ -77,9 +105,8 @@
                                     }
                                     @endphp
                                 </td>
-                                <td>Admin(Pendiente)</td>
+                                <td>{{ $row->agent ? $row->agent->name : "-" }}</td>
                                 <td>{{ display_date($row->created_at)}}</td>
-                                {{--<td class="status">{{$row->status}}</td>--}}
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

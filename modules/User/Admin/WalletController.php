@@ -129,9 +129,9 @@ class WalletController extends AdminController
         }
     }
     public function report(){
-        $query = DepositPayment::query();
+        $query = DepositPayment::with('transfer_coin');
 
-        $query->where('object_model','wallet_deposit')->orderBy('id','desc');
+        $query->where('object_model','wallet_deposit')->orderBy('bravo_booking_payments.id','desc');
         if($user_id = request()->query('user_id'))
         {
             $query->where('object_id',$user_id);
@@ -144,15 +144,13 @@ class WalletController extends AdminController
         if($agent_id = request()->query('agent_id'))
         {
             $query->join('users',"users.id", "bravo_booking_payments.object_id");
-            $query->join('core_model_has_roles',"core_model_has_roles.model_id", "users.id");
-            $query->where('role_id',5);
-            $query->where('bravo_booking_payments.object_id', $agent_id);
+            $query->where('users.agent_id', $agent_id);
         }
 
         if(request()->query('from') && request()->query('to')){
             $from = request()->query('from');
             $to = request()->query('to');
-            $query->whereBetween('updated_at', [$from, $to]);
+            $query->whereBetween('bravo_booking_payments.updated_at', [$from, $to]);
         }
 
         $data = [

@@ -27,6 +27,13 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label>{{ __('User Client')}}</label>
+                                <select name="client" id="client" class="form-control">
+                                    <option value="0" @if(!$row->client) selected @endif>{{ __('No') }}</option>
+                                    <option value="1" @if($row->client) selected @endif>{{ __('Yes') }}</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>{{ __('Ordering')}}</label>
                                 <select name="orderby" id="orderby" class="form-control">
                                     @foreach ($roles as $index => $role)

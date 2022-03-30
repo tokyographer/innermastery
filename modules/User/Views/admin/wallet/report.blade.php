@@ -1,4 +1,9 @@
 @extends('admin.layouts.app')
+<style>
+    .withdraw{
+        background: rgb(255 201 201 / 40%)!important;
+    }
+</style>
 @section('content')
     <div class="container-fluid">
         <div class="d-flex justify-content-between mb20">
@@ -37,7 +42,7 @@
                         \App\Helpers\AdminForm::select2('agent_id', [
                             'configs' => [
                                 'ajax'        => [
-                                    'url'      => url('/admin/module/user/getForAgent'),
+                                    'url'      => url('/admin/module/user/getForAsesor'),
                                     'dataType' => 'json'
                                 ],
                                 'allowClear'  => true,
@@ -94,11 +99,12 @@
                             <th width="80px">{{__('Status')}}</th>
                             <th width="150px">{{__('Payment Method')}}</th>
                             <th width="120px">{{__('Created At')}}</th>
+                            <th>{{__('Concept')}}</th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach($rows as $row)
-                            <tr>
+                            <tr class="{{$row->payment_gateway}}">
                                 <td><input type="checkbox" class="check-item" name="ids[]" value="{{$row->id}}">
                                     #{{$row->id}}</td>
                                 <td>
@@ -113,15 +119,16 @@
                                         {{ __('without Asesor') }}
                                     @endif
                                 </td>
-                                <td>{{format_money_main($row->amount)}}</td>
-                                <td>{{$row->getMeta('credit')}}</td>
+                                <td>@if($row->payment_gateway=="withdraw")-@endif{{format_money_main($row->amount)}}</td>
+                                <td>@if($row->payment_gateway=="withdraw")-@endif{{$row->getMeta('credit')}}</td>
                                 <td>
                                     <span class="label label-{{$row->status}}">{{$row->statusName}}</span>
                                 </td>
                                 <td>
-                                    {{$row->gatewayObj ? $row->gatewayObj->getDisplayName() : ''}}
+                                    {{$row->gatewayObj ? $row->gatewayObj->getDisplayName() : __(ucwords($row->payment_gateway))}}
                                 </td>
                                 <td>{{display_datetime($row->updated_at)}}</td>
+                                <td>{{$row->transfer_coin ? $row->transfer_coin->payment_concept : '-'}}</td>
                             </tr>
                         @endforeach
                         </tbody>

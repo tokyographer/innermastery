@@ -1,6 +1,8 @@
 <?php
 use \Illuminate\Support\Facades\Route;
 
+Route::get('/{id}/view', 'UserController@user_view')->name('user.admin.user_view_only');
+
 Route::get('/getForSelect2', 'UserController@getForSelect2')->name('user.admin.getForSelect2');
 Route::get('/getForAgent', 'UserController@getForAgent')->name('user.admin.getForAgent');
 Route::get('/getForAsesor', 'UserController@getForAsesor')->name('user.admin.getForAsesor');

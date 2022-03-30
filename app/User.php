@@ -23,8 +23,9 @@
     use Illuminate\Database\Eloquent\SoftDeletes;
     use Illuminate\Support\Facades\Auth;
     use Tymon\JWTAuth\Contracts\JWTSubject;
+    use Modules\Location\Models\Location;
     use App\Traits\HasWallet;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+    use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable implements MustVerifyEmail,JWTSubject,Wallet
     {
@@ -447,6 +448,9 @@ class User extends Authenticatable implements MustVerifyEmail,JWTSubject,Wallet
 
         public function agent(){
             return $this->BelongsTo(User::class, 'agent_id');
+        }
+        public function location(){
+            return $this->BelongsTo(Location::class, 'location_id');
         }
     }
 

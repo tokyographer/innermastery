@@ -1,2 +1,7 @@
-
-beyond2402.zip
+storage/
+vendor/
+.env
+DOCS/
+tests/
+*.zip
+*.rar

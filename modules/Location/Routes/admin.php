@@ -11,6 +11,7 @@ Route::post('/store/{id}','LocationController@store')->name('location.admin.stor
 Route::get('/getForSelect2','LocationController@getForSelect2')->name('location.admin.getForSelect2');
 Route::post('/bulkEdit','LocationController@bulkEdit')->name('location.admin.bulkEdit');
 
+Route::get('/getForLocation','LocationController@getForLocation')->name('location.admin.getForLocation');
 
 Route::group(['prefix' => 'category'],function (){
     Route::get('/','CategoryController@index')->name('location.admin.category.index');

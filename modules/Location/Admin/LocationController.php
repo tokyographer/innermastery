@@ -176,4 +176,21 @@ class LocationController extends AdminController
         }
         return redirect()->back()->with('success', __('Updated success!'));
     }
+
+    public function getForLocation(Request $request)
+    {
+        $res = Location::orderBy('id','desc')->limit(20)->get();
+        $data = [];
+        if (!empty($res)) {
+            foreach ($res as $item) {
+                $data[] = [
+                    'id'   => $item->id,
+                    'text' => $item->name . ' (#' . $item->id . ')',
+                ];
+            }
+        }
+        return response()->json([
+            'results' => $data
+        ]);
+    }
 }

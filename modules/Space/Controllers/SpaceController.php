@@ -9,6 +9,7 @@ use Modules\Location\Models\Location;
 use Modules\Review\Models\Review;
 use Illuminate\Support\Facades\Auth;
 use Modules\Core\Models\Attributes;
+use Spatie\Permission\Models\Role;
 use App\User;
 use DB;
 
@@ -102,8 +103,18 @@ class SpaceController extends Controller
         }
         $review_list = $row->getReviewList();
 
-        $customer = User::role("customer")->get();
-
+        $customer = [];
+        $rows_role = Role::where("client", 1)->get();
+        if($rows_role){
+            foreach ($rows_role as $role) {
+                $datas = User::role($role->name)->get();
+                foreach ($datas as $data) {
+                    array_push($customer, $data);
+                }
+            }
+        }else{
+            $customer = User::all();
+        }
         $data = [
             'row'          => $row,
             'translation'       => $translation,
